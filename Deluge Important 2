@@ -1,0 +1,2108 @@
+ Deluge Important 2
+
+#important
+
+Zero trust password: Gigo@9441116950
+
+5/06/2026
+
+->newLine = hexToText("0A"); This is commonly used for line break feature.
+
+Example:  msg = "Hello" + hexToText("0A") + "World";
+info msg; 
+Ans: Hello
+World  As this is mainly used for line breaks in csv file if we do bulk writebjobs , but this cannot be implemented in Zoho CRM multiline, notes or anywhere
+
+->Due date validation function ( added init hub )
+
+
+-> Download mail merge API Error ( INTERNAL_ERROR message Error in getting merged stream from writer status error) 
+
+Please check whether the scopes configured under the connection named "crm" are correct.
+
+Kindly ensure that the following scopes have been added. If any of them are missing, please add them and test again, as the functionality should work as expected once the required scopes are included.
+
+ZohoCRM.settings.mailmerge.CREATE, ZohoWriter.documentEditor.ALL, ZohoWriter.merge.ALL
+
+https://www.zoho.com/crm/developer/docs/api/v8/download-mail-merge.html
+
+-> When a deal stage is changes , create a project under zoho project and associate it to the deals .  Sample code.  projid = <id>;//-- ID of existing project
+projname = rec.get("name"); //--  Name of existing project
+mp = Map();
+mp.put("name",projname);
+contdet = Map();
+contdet.put("id",dealId);
+mp.put("deals",contdet.toList());
+datalist = List();
+datalist.add(mp);
+datamp = Map();
+datamp.put("data",datalist);
+resp = invokeurl
+[
+	url :"https://www.zohoapis.com/crm/v2/Deals/" + dealId + "/Zoho_Projects/" + projid
+	type :POST
+	parameters:datamp.toString()
+	connection:"associateprojects" //-- connection name
+];
+info resp;  https://www.zoho.com/crm/developer/docs/api/v8/update-related-records.html
+
+-> When sending payload to Zoho CRM , please make sure the character size limit is 10,000 characters , if it is more then you will get the error as 
+
+AccountEventService CURL error 0 w/ HTTP code 413.
+
+->The CX wants to know what happens if they share the Client ID and CLient secret ID to a user. Will they be able to see all the data in CRM, or only their data in CRM ( Especially deals). Thanks  Yes, your understanding is exactly correct. If you share the Client ID and Client Secret with the 'Path AGI' user, and they generate the access token by signing in with their own 'Path AGI' credentials, the API will strictly enforce their user profile limits.
+The resulting Access Token is tied to the user who authorized it. Therefore, they will not be able to see the entire CRM database. The API will only allow them to pull and view the exact same 'digital states data' that they are normally allowed to see when they log into the CRM directly. Because of this, it is perfectly feasible and safe to share the Client ID and Secret with them for this purpose.
+  ->Get Zoho CRM attachments and update it into zoho projects end .  Sample code.  	response = invokeurl
+[
+	url: "https://www.zohoapis.in/crm/v8/Leads/517970000024542010/Attachments?fields=id,$file_id"
+	type: GET
+	connection:"hellokar"
+];
+info response;
+
+ab=response.get("data").get(0).get("$file_id");
+info ab;
+
+response1 = invokeurl
+[
+	url: "https://www.zohoapis.in/crm/v8/files?id="+ab
+	type: GET
+	connection:"sendfileszfs"
+];
+info response1;
+
+portal=60029944740;
+project_id=233933000000321003;
+
+
+ 			asds = invokeurl
+[
+url :"https://projectsapi.zoho.in/api/v3/portal/"+portal+"/projects/"+project_id+"/folders"
+type :GET
+connection:"newproject"
+];
+
+info asds;
+
+folderId=asds.get("folders").get(1).get("workdrive_folder_id");
+
+info folderId;
+
+list_of_text = List();
+location_details = Map();
+location_details.put("project_id",project_id);
+location_details.put("folder_id",folderId);
+location = Map();
+location.put("location_details",location_details);
+
+list_of_text.add({"paramName":"upload_file","content":response1});
+
+list_of_text.add({"paramName":"attachment_details","content":location.toString(),"stringPart":"true","encodingType":"UTF-8"});
+
+
+
+globalAttachments = invokeurl
+[
+	url :"https://projectsapi.zoho.in/api/v3/portal/" + portal + "/attachments"
+	type :POST
+	files:list_of_text
+	connection:"new1"
+];
+info globalAttachments;
+
+
+-> IF cx want an image or any file upload field within blue print transition , then we cannot do that via default rather as a workaround , then can go with widget or Kiosk to achieve this.
+
+Using kiosk to have file upload field in blueprint: We can use Kiosk as a During action.
+ 
+Within Kisoks Create a Screen to upload File and Map it with the Record's File Upload field in the Update Field Action.
+
+But while using the Kiosk we can not use any other During Actions in Blueprint.
+ 
+￼
+￼
+
+->We can also download the file upload or image upload fields using Download Field Attachments API.  https://www.zoho.com/crm/developer/docs/api/v8/download_field_attachments.html 
+￼
+
+
+And using above we can only get the Main fields ( image or file upload ) but not subform fields of ( image or file upload )
+
+->Get input method does not support date fields , so they can use the text field and enter the date there and using script we can convert the date into specific format and update the field
+
+Or else They need to go with widget or Slyte UI
+
+-> When creating a meeting , the field : eventMap.put("Meeting_Venue__s",meetingvenue); Meeting Venu will be updated only if we use V8 version  API  Sample code:  void automation.CreateMeetingFromDeal(Int dealId)
+{
+dealInfo = zoho.crm.getRecordById("Deals",dealId);
+meetingDateTime = dealInfo.get("Meeting_Date").toTime("yyyy-MM-dd'T'HH:mm:ss");
+formattedDateTime = meetingDateTime.toString("yyyy-MM-dd'T'HH:mm:ss");
+info meetingDateTime;
+info formattedDateTime;
+if(meetingDateTime != null)
+{
+	eventMap = Map();
+	dealName = ifnull(dealInfo.get("Deal_Name"),"Deal");
+	meetingvenue = ifnull(dealInfo.get("Meeting_Venue"),"");
+	info "meetingvenue"+meetingvenue;
+	startDT = meetingDateTime.toString("yyyy-MM-dd'T'HH:mm:ssXXX");
+	endDT = meetingDateTime.addHour(2).toString("yyyy-MM-dd'T'HH:mm:ssXXX");
+	eventMap.put("Event_Title","Deal Meeting for " + dealName);
+	eventMap.put("Start_DateTime",startDT);
+	eventMap.put("End_DateTime",endDT);
+	eventMap.put("$se_module","Deals");
+	eventMap.put("What_Id",dealId);
+	eventMap.put("Meeting_Venue__s",meetingvenue);
+	contactLookup = dealInfo.get("Contact_Name");
+	if(contactLookup != null)
+	{
+		eventMap.put("Who_Id",contactLookup.get("id"));
+	}
+	ownerMap = dealInfo.get("Owner");
+	if(ownerMap != null)
+	{
+		eventMap.put("Owner",ownerMap.get("id"));
+	}
+	info startDT;
+	info endDT;
+	info eventMap;
+	response = zoho.crm.v8.createRecord("Events",eventMap);
+	info response;
+}
+}
+
+-> We cannot merge field upload field into an inventory template . So, as a workaround they need to upload it into the work drive and get the public URL and upload it into a URL field and use the URL field and merge it into template
+
+->Create a event in Zoho calendar Code  string button.createduplicateevent(String dealid, String location, String dealName)
+{
+ deal = zoho.crm.getRecordById("Deals", dealid);
+		startDt = deal.get("Installtion_Date");
+		info "startDt"+startDt;
+		endDt = deal.get("installation_End_Date");
+		starStr=startDt.toString("yyyyMMdd'T'HHmmss'Z'","GMT");
+		info "starStr"+starStr;
+		endStr = endDt.toString("yyyyMMdd'T'HHmmss'Z'","GMT");
+		reminder1 = Map();
+		reminder1.put("action", "popup");
+		reminder1.put("minutes", "-60");
+		remindersList = List();
+		remindersList.add(reminder1);
+		dateTimeMap = Map();
+		dateTimeMap.put("timezone", "Asia/Calcutta");
+		dateTimeMap.put("start", starStr);
+		dateTimeMap.put("end", endStr);
+		eventDetails = Map();
+		eventDetails.put("estatus", "added");
+		eventDetails.put("title", dealName + " - " + location);
+		eventDetails.put("dateandtime", dateTimeMap);
+		eventDetails.put("reminders", remindersList);
+		eventDetails.put("isallday", "false");
+eventDetails.put("color","#E574B0");
+		eventData = Map();
+		eventData.put("eventdata", eventDetails);
+		createEvent = invokeurl
+		[
+			url :"https://calendar.zoho.in/api/v1/calendars/bd4380c5d76740f5b9b5d9a248a72764/events"
+			type :POST
+			parameters:eventData
+			connection:"zcalendar"
+		];
+		info createEvent;
+		return "success";
+}
+
+-> make sure the Standalone function argument mapping is of “*crmAPIRequest” with Date type as “MAP” and get the body from itto get the request parameters.
+
+
+->Webhooks:  The web hooks will send an email only if the credits or out. I mean credits are not there. So , the email gets received to the cx only if the credits are out, but not if there is any failure. So, if they want to know the failure then they need to check the workflow failure or webhook failure
+
+
+-> Mirror fields :  Requirement : if there is an account and the account has 10 contacts associated under the related list . So, the requirement is if the specific field in account is being updated , then the same type of field in contacts should also be updated.  So, what we need to do is goto contacts and click on 3 dots besides the lookup field of account -> select mirror fields, and choose the account field that needs to be updated in contacts and save the layout.  After this , when ever a field in accounts is updated the same field gets also updated in contacts as well ( I mean all related contacts ) , so rather than using function we can directly make use of mirror fields. It works as vice versa as well. ( I mean if changed in accounts the same reflect in contacts as well )
+
+-> Client script on load in detail page .  if there is a requirement on detail page on before field update event . In the above , the field and the page gets automatically loaded , there is no need to add refresh script after the field is updated , because the refresh automatically happens. The requirement is the button needs to be disabled when a specific field in updated to specific value, so this works without any refresh.
+
+And on before field update action , the value parameters gives the updated field value and if we wanted previous value then we need to fetch by API or fetch by record ID method.  -> OpenURl deluge task in order to redirect:  return openUrl("https://crm.zoho.in/crm/abcdefg/tab/Invoices/" + invoiceId + "?pfrom=gsearch","same window");  Note that , this works only in buttons , because in buttons there will be return statement so in return we need to paste it.  -> Client script  In detail page , field event the date time fields is not supported only date field is supported.   
+￼
+ 
+->Zoho projects and Zoho CRM:  Create Zoho project with specific template ID with the project group.  Updated the code in the CRM Functions.  -> Client script on change event:  The client script on change event only occurs if the field value is changed to some other value . If same value is changed to the same value then it will not work , As an alternative workaround, you can ask them to store the picklist value in another field. Once this is done, when the picklist field is changed again, they can use a script to compare it with the value in the other field. If both field values are the same, then update the count; otherwise, do not update the count.
+
+->We also do have Data backup API .  https://www.zoho.com/crm/developer/docs/api/v8/backup-overview.html  -> Save button disable using client script.  var accid = value.id;
+console.log("accid", accid);
+
+var ab = await zrc.get('/crm/v8/Accounts/' + accid);
+console.log("ab", ab);
+
+var asd = ab.data;
+console.log("asd", asd);
+
+var state = asd.data[0].$approval_state;
+console.log("state", state);
+
+if (state == "approval_process_pending")
+{
+    var save_btn = ZDK.Page.getButton('record_save');
+save_btn.disable();
+}
+
+
+-> Formulae fields:  When we update a field that is present in the formula Field then the formula also updates, but when we update the same field via mass update then the formula field will not update, for this we need to create a new check box field and mass update the check box and include that checkbox inside the formulae-Need to check with Nitesh 
+
+->Client script:   In a Client Script on the Detail Page, when an action is configured under the Before Update event, any field updates performed through the script will not be reflected immediately on the page. The page needs to be refreshed to load the updated values.
+Even if we add a refresh script, it will execute before the field update from the Before Update event is completed. As a workaround, we need to update the required fields using an API call and update the same field through the API after triggering a page refresh.
+
+
+-> Webhooks:  When you get an error in the web hooks failure as “The webhook has been blocked due to security reasons." Then ask them to try the same in POSTMAN and check once.
+
+->COQL and Search records important.
+
+In search records the quals will be taken as contains. Let’s say there is a name that we want to search is “Harry Potter” in leads. So, if used search records API with “Harry Potter” search, then the records with just Potter and Harry will also be shown, so it takes as contains rather than exact equals.  So, suggest users to Make use of COQL rather than Search records as it gives the exact results.    23/06/2026  -> Set current year to a picklits field in CRM via client script.
+
+console.clear();
+var currentYear = new Date().getFullYear().toString();
+console.log(currentYear);
+var setvalue = ZDK.Page.getField("Year_picklist").setValue(currentYear);
+console.log(setvalue);
+  -> Download work drive file :  asd="vpzd99d1431ac399a427a920ff8afe10b7380";
+
+	header = Map();
+	header.put("Accept","application/vnd.api+json");
+	downloadFile = invokeurl
+	[
+		url :"https://download.zoho.in/v1/workdrive/download/" + asd
+		type :GET
+		headers:header
+		connection:"workdrive"
+	];
+	
+	info downloadFile;
+	
+	downloadFile.setFileName("sampleFile.pdf");
+	
+	attFile = zoho.crm.attachFile("Deals",517970000024970035,downloadFile);
+	
+	info attFile;  ->COQL Test:  cr="SHRI SAI SURGICAL & MEDICAL STORE - Surgical Gloves";
+	
+	cr_query = Map();
+cr_query.put("select_query","select id, Name from Calibration where Name = '" + cr + "'");
+lastRecordSearch = invokeurl
+[
+url :"https://www.zohoapis.in/crm/v7/coql"
+type :POST
+parameters:cr_query.toString()
+connection:"coql"
+];
+info lastRecordSearch;  -> We can make file upload field as mandatory in edit and create page , but not on detail page
+
+-> Move attachments to Zoho projects Code.  portal = "918995843";
+deal = zoho.crm.getRecordById("Deals",id);
+deal_name = deal.get("Deal_Name");
+id = input.id;
+mp = Map();
+mp.put("name",deal_name);
+mp.put("is_public_project","true");
+create_project = invokeurl
+[
+	url :"https://projectsapi.zoho.com/api/v3/portal/" + portal + "/projects"
+	type :POST
+	parameters:mp.toString()
+	connection:"project"
+];
+info "create_project >>" + create_project;
+project_id = create_project.getJson("id");
+info "project_id >>" + project_id;
+get_project_WDfolder = invokeurl
+[
+	url: "https://projectsapi.zoho.com/api/v3/portal/"+portal+"/projects/"+project_id+"/documents"
+	type: GET
+	connection:"project"
+];
+info "get_poject_folder_details >>" + get_project_WDfolder;
+get_documents=get_project_WDfolder.getJSON("documents");
+info get_documents ;
+get_folder=get_documents.getJSON("folders");
+info get_folder ;
+get_folder_id=get_folder.getJSON("workdrive_folder_id");
+info get_folder_id ;
+ap = Map();
+ap.put("name",deal_name);
+// ap.put("project_owner",zuid);
+datalist = List();
+datalist.add(ap);
+datamp = Map();
+datamp.put("data",datalist);
+associate_project = invokeurl
+[
+	url :"https://www.zohoapis.com/crm/v2.1/Deals/" + id + "/Zoho_Projects/" + project_id
+	type :POST
+	parameters:datamp.toString()
+	connection:"crm"
+];
+info associate_project;
+deals_attachments_dets = invokeurl
+[
+	url :"https://www.zohoapis.com/crm/v8/Deals/" + id + "/Attachments?fields=id,File_Name"
+	type :GET
+	connection:"crm"
+];
+info "deals_attachments_dets" + deals_attachments_dets.size();
+attachment_ids = list();
+if(deals_attachments_dets.size() > 0)
+{
+	deals_attachments = deals_attachments_dets.get("data");
+	for each  file in deals_attachments
+	{
+		get_attachement_id=deals_attachments.getJSON("id");
+        get_file_name=deals_attachments.getJSON("File_Name");
+		down_attach = invokeurl
+[
+	url: "https://www.zohoapis.com/crm/v8/Deals/"+id+"/Attachments/"+get_attachement_id
+	type: GET
+	connection:"crm"
+];
+info down_attach;
+		upload = zoho.workdrive.uploadFile(down_attach,get_folder_id,get_file_name, true, "wd");
+info "upload WD>>"+ upload ;
+	if(upload.getJson("data")!=null)
+	{
+		data= upload.getJson("data");
+		Permalink= data.getJson("attributes").getJson("Permalink");
+		info Permalink ;
+		//info up;
+	}	
+}
+}
+
+-> To get Keys from the objects:  var ab = $Page.record;
+console.log("ab", ab);
+
+
+// var objec = keys(ab);
+// console.log("objec", objec);
+
+var abc = Object.keys(ab);
+
+console.log("abc", abc);
+
+for (i = 0; i < abc.length; i++)
+{
+    var field_obj = ZDK.Page.getField(abc.i);
+field_obj.setReadOnly(true);
+
+}
+
+30/06/2026
+
+->Workdrive folder management:  https://help.zoho.com/portal/en/community/topic/kaizen-223-file-manager-in-crm-widget-using-zrc-methods?utm_source=zsbot
+
+->Set reminder in Task:  Use the below code.  	mp.put("Remind_At",{"ALARM":"FREQ=NONE;ACTION=POPUP;TRIGGER=DATE-TIME:" + 
+startDt.toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'")});  Sample full code:  	leadDetails = zoho.crm.getRecordById("Leads",517970000025356117);
+reminderTime = leadDetails.get("Created_Time").addDay(1).toTime();
+info reminderTime;
+startDt = "2026-07-30 08:47:00";
+
+info startDt;
+
+startDtt= "2026-07-30".toDate();
+
+info startDtt;
+//info reminderTime;
+mp=map();
+mp.put("Subject","reminddddsssss");
+mp.put("$se_module","Leads");
+mp.put("What_Id",517970000025356117);
+mp.put("Owner",leadDetails.get("Owner").get("id"));
+mp.put("Due_Date",startDtt);
+// mp.put("Remind_At",{"ALARM":"FREQ=NONE;ACTION=EMAILANDPOPUP;TRIGGER=DATE-TIME:" + startDt.toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'")});
+	mp.put("Remind_At",{"ALARM":"FREQ=NONE;ACTION=POPUP;TRIGGER=DATE-TIME:" + 
+startDt.toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'")});
+mp.put("Status","Not Started");
+mp.put("Send_Notification_Email",true);
+createTask = zoho.crm.createRecord("Tasks",mp);
+info mp;
+info createTask;  make sure the Remind date time to be greater than Task Due Date.  ->Webhooks Consists of Header and Body.  Header : They provide important metadata about the request or response, such as the content type, authorization credentials, and more.
+
+An API request typically consists of several components that convey specific information to the server. These components help the client and the server understand and fulfill each other’s requirements.
+
+Common Types of API Headers
+ Authorization: Bearer <token>  Content-Type: application/json
+
+
+Body: The API body is the part of the request or response that contains the actual data being transferred. It is particularly important in methods such as POST, PUT, PATCH, and DELETE, where the client needs to send data to the server.  Types of Data in API Bodies  JSON:  					{
+  "data": {
+    "user": {
+      "name": "John",
+      "age":30
+    }
+  }
+}
+  Form-Data, raw data and everything comes in body.  In webhooks in CRM we can create a webhook and send the data to 3 rd party application by providing the request URL. And the request URL will receive the data that is passed from the web hooks.  Example: Create a standalone function with arguments of crmAPIRequest and then info the crmAPIRequest and then enable the OAUTH for that specific function and copy the URL and paste it in the place of webhook URL and add the data under body and trigger it ,so it passes the data into the specific function and triggers it.
+
+-> In convert lead integration task:  Using convert lead integration task , we can pass change the layout ID of deals, contacts, accounts only the layout mapping done in lead conversion mapping will be mapped.  To pass the layout ID we need to create a function with all the mapping.  -> ZDK error in client script also occurs if the field they are trying to update has no permissions ( Admin permissions )
+
+-> ZDK error also occurs if the developer Hub permissions in profile permissions are not given.
+
+-> Using v2 integration task , when creating the deal it takes the pipeline as standard , but in v7, v8 we need tp pass pipeline externally in order to set the stage.  ->Use COQL:  Use COQL API if using search records API is returning empty even if there is a record with criteria , because in search records some time the special characters will not be taken into effect.  	encodedCode="HU10FHA(2)-T";
+		
+		queryMap = Map();
+queryMap.put("select_query", "select Product_Name from Products where Product_Name = '"+encodedCode+"'");
+response = invokeurl
+[
+	url :"https://www.zohoapis.in/crm/v8/coql"
+	type :POST
+	parameters: queryMap.toString()
+	connection:"coql"
+];
+info response;  ->Download inventory template with merge field values and attach it in the record.  download = invokeurl
+[
+	url :"https://www.zohoapis.com/crm/v2/settings/inventory_templates/3020631000026105069/actions/print_preview?record_id=" + Id + "&print_type=pdf"
+	type :GET
+	connection:"connection"
+];
+info download;
+attach = zoho.crm.attachFile("Quotes",Id,download);
+info attach;  ->  date = zoho.currentdate.toString("yyyyMMdd");
+ 
+ info date; 20260701  -> Download the file and update into file upload filed.  	download = invokeurl
+	[
+		url :"https://www.zohoapis.com/crm/v2/settings/inventory_templates/3020631000026105069/actions/print_preview?record_id=" + Id + "&print_type=pdf"
+		type :GET
+		connection:"connection"
+	];
+
+	info download;
+
+
+	download.setFileName(file_name);
+
+	download.setParamName("file");
+
+	file_response = invokeurl
+	[
+		url :"https://www.zohoapis.com/crm/v2/files"
+		type :POST
+		files:download
+		connection:"connection"
+	];
+
+	info file_response;
+
+
+	file_id = file_response.get("data").get(0).get("details").get("id");
+
+	info "File ID: " + file_id;
+
+	file_list = List();
+
+	file_map = Map();
+	file_map.put("file_id", file_id);
+
+	file_list.add(file_map);
+
+	update_map = Map();
+	update_map.put("Final_quote", file_list);
+
+
+	update_response = zoho.crm.updateRecord("Quotes", Id, update_map);
+
+	info update_response;
+
+
+-> Joel Anna code in Guthub
+
+->Starts with in deluge:  product_name="Zoho Creator";
+result = product_name.startsWith("Zoho");
+info result;
+
+
+->Using Timeline API we can get the approval and rejected reasons as well. 
+ 
+
+
+￼
+
+
+
+
+->Tax field:  The products record tax fields cannot be got using v2 integration task , as they need to make use of invoke URL API to fetch the product derails and use it.  	assd=invokeurl
+    [
+    	url: "https://www.zohoapis.in/crm/v8/Products/517970000025118029"
+    	type: GET
+    	connection:"hellokar"
+    ];
+	
+	info assd;
+
+-> When a  b record is associated via lookup , and the same b record is deleted , then the lookup association will also be deleted.  ->In calls module , the voice recording field will only be enabled and updated if the telephony integration is active .  Sample code.    callRecord = zoho.crm.getRecordById("Calls", callId);
+    description = callRecord.get("Description").toString();
+    searchStr = "https://[our-domain]/recording/";
+    startIndex = description.indexOf(searchStr);
+    if(startIndex != -1)
+    {
+        remaining = description.subString(startIndex);
+        endIndex = remaining.indexOf("\n");
+        if(endIndex == -1)
+        {
+            recordingUrl = remaining.trim();
+        }
+        else
+        {
+            recordingUrl = remaining.subString(0, endIndex).trim();
+        }
+        updateMap = map();
+        updateMap.put("Voice_Recording__s", recordingUrl);
+        zoho.crm.v8.updateRecord("Calls", callId, updateMap);
+    }
+
+-> Formaile complex.  If(
+Or(
+${Invoiced Items.Room Category}=='Suit Room (996311)',
+${Invoiced Items.Room Category}=='Cozy Hill Room (996311)',
+${Invoiced Items.Room Category}=='Comfort Room (996311)',
+${Invoiced Items.Room Category}=='Private Room (996311)',
+${Invoiced Items.Room Category}=='Full Property (996311)'
+),
+(${Invoiced Items.Tariff}*${Invoiced Items.Number Of Nights})+(${Invoiced Items.Extra Bed}),
+(${Invoiced Items.Tariff}*${Invoiced Items.Number Of Guest}*${Invoiced Items.Number Of Nights})+(${Invoiced Items.Extra Bed})
+)
+
+
+->To open a downloaded file or downloaded document in another tab to view the file code.   template_map = Map();
+template_map.put("name",template_name);
+mail_merge_entry = Map();
+mail_merge_entry.put("mail_merge_template",template_map);
+mail_merge_entry.put("output_format","pdf");
+mail_merge_entry.put("file_name",file_name + "_" + zoho.currenttime);
+download_list = List();
+download_list.add(mail_merge_entry);
+body = Map();
+body.put("download_mail_merge",download_list);
+// Generate PDF
+file = invokeurl
+[
+	url :"https://www.zohoapis.com/crm/v8/" + module_name + "/" + id + "/actions/download_mail_merge"
+	type :POST
+	body:body.toString()
+	headers:headers
+];
+// ================= ATTACH PDF =================
+attachResp = invokeapi
+[
+	service :zohocrm
+	path :"/crm/v7/" + module_name + "/" + id + "/Attachments"
+	type :POST
+	body:{{"param-name":"file","param-value":file}}
+];
+info attachResp;
+// Get attachment ID
+attachment_id = attachResp.get("data").get(0).get("details").get("id");
+// ================= OPEN ATTACHMENT =================
+attachments = zoho.crm.getRelatedRecords("Attachments",module_name,id);
+for each  att in attachments
+{
+	if(att.get("id") == attachment_id)
+	{
+		download_url = "https://crm.zoho.com/crm/org882240126/ViewAttachment" + "?fileId=" + att.get("$file_id") + "&module=CustomModule13" + "&parentId=" + att.get("Parent_Id").get("id") + "&creatorId=" + att.get("Created_By").get("id") + "&id=" + attachment_id + "&name=" + file_name + ".pdf" + "&downLoadMode=pdfViewPlugin";
+		openUrl(download_url,"new window");
+		break;
+	}
+}
+
+
+->Thanks for waiting. Using the default Convert button, we cannot display a pop-up with the required fields.
+ 
+As a workaround, they can configure a Blueprint transition. They can create a Convert transition and, during the transition setup, select the fields that need to be validated before proceeding with the conversion.
+
+
+-> Download Workdrive file and upload it into Zoho CRM.  asd="vpzd99d1431ac399a427a920ff8afe10b7380";
+
+	header = Map();
+	header.put("Accept","application/vnd.api+json");
+	downloadFile = invokeurl
+	[
+		url :"https://download.zoho.in/v1/workdrive/download/" + asd
+		type :GET
+		headers:header
+		connection:"workdrive"
+	];
+	
+	info downloadFile;
+	
+	downloadFile.setFileName("sampleFile.pdf");
+	
+	attFile = zoho.crm.attachFile("Deals",517970000024970035,downloadFile);  ->Assignment rule trigger via function.  Sample code:  mp5 = Map();
+mp5.put("Deal_Name","contactId1");
+mp5.put("Membership_Status","Active");
+create5 = zoho.crm.createRecord("Membership",mp5,{"trigger":["workflow","blueprint","approval"],"lar_id":"2490656000010688007"});
+info create5;
+  Here if wanted to assign records in round robin pattern , then add lar_id at the end of the create record . And then if the criteria specified in the assignment rule is not satisfied by the record , then it will not trigger.
+
+-> Email properties in arguments of Email workflow.  The Message ID can be obtained from the Email Properties under the arguments section.
+Please refer to the attached screenshot for reference. 
+Email Keyword: This provides the most prominent nouns, topics, or action items identified from the email content. Examples: billing, dashboard, invoice, critical issue. 
+Email Intent: This categorizes the purpose of the email based on its phrasing and context. Examples: Complaint, Query, Request, Purchase. 
+Email Sentiment: This identifies the emotional tone of the sender's message. Examples: Positive, Negative, Neutral.  
+￼
+ ->Error: Attempted to reach an untrusted domain:  Please ask them to add the API under trusted domain in Zoho CRM and it gets resolved.  ->Data sharing Rule API in Zoho CRM ( Error : Sharing rule computation is in process, please try after some time )  Using this we can only share and call a single API , if tried multiple sharing , then the above error will come.  So, ask them to add all the users into one group and share to that group rather than individually.  -> Mirror component fields cannot be edited
+
+-> The flow:  When creating a deal , when we give the contact name , the account that is associated to that contact  will e automatically updated in account name field of deal record.  And when we change the Account name further , we can change it . 
+So, there is 2 fields connect name and account name . I have set the lookup filter for contact name as “ Account name is Account name ( Deals) “ and enabled validate the lookup on record edit page . -> So, we know if a contact is selected then the account will also be populated automatically, so if I enabled the filter and validate then if I change the Account name field in edit page to a different value , then the error will be shown in contact name field stating: The selected contact do not satisfy the lookup criteria, so we need to change the account or contact.
+
+And here we can change the contact based on the filter because the account field is filled and based on the account field the contact name will be filtered and easily selected.
+
+
+->Set criteria for a picklist field.  console.clear();
+
+var roleName = $Crm.user.role.name;
+
+console.log("role", roleName);
+
+var stageField = ZDK.Page.getField("Stage");
+
+if(roleName === "CEO")
+
+{
+    console.log("true");
+
+    stageField.setCriteria("(actual_value:in:Closed Won,Closed Lost)");
+
+} 
+We can even pass it in list as well.  let ll = ["Asia", "Government"];
+var field_obj = ZDK.Page.getField('Territor');
+field_obj.setCriteria("((actual_value:in:" + ll + "))");
+
+->Price Book Association.   ZDK.Page.getSubform('Quoted_Items').getRow(index).getCell('Price_Book_Name').setValue({ "id": "170718000040383009", "name": "Sales Pricelist 2025" })
+
+-> For subform cell, the set value will work on detail page.  var as = ZDK.Page.getSubform("Assets_Subform").getRow(index).getCell('pickone').setValue("2");
+
+-> We cannot make or use the set criteria method for lookup records to show all the records which they don’t have access to also.  ->To fetch content from the Notes fields using deluge and client script if users tag is added ., here is the code for that.  The below ab is the content of the notes, the below code works for both if tagged before and after the content  	if(ab.startsWith("crm"))
+	{
+		info "rtye";
+
+index = ab.lastIndexOf("crm ");
+
+info index;
+
+noteContent = ab.subString(index + 4);
+
+info noteContent;
+		
+	}
+	else 
+    {
+		index = ab.indexOf("crm");
+
+
+    noteContent = ab.subString(0,index);
+    info noteContent;
+		
+    }
+
+->And we cannot disable send email button in normal modules, but can be disabled in inventory. Modules.  ->Client script can also work in portals , but connections method cannot be worked as because the portal interface is different . And also Zdk.client method also will not work, because there will be no user and this should be tested.  -> Validation rule will also work in portals. Blueprint , will work in portals.
+
+-> To add tax under line items of tax field , use the below code .  taxMap.put("name","Sales Tax");
+taxMap.put("percentage",20.0);
+lineTaxList.add(taxMap);  lineItem.put("line_tax",lineTaxList);
+
+invoiceMap.put("Product_Details",productDetailsList);
+
+13/07/2026
+
+-> Change subform Row order.
+
+recordId = 517970000025483119;
+response = invokeurl
+[
+	url :" https://www.zohoapis.in/crm/v8/Quotes/" + recordId
+	type :GET
+	connection:"hellokar"
+];
+info response;
+quoteData = response.get("data").get(0);
+quotedItems = quoteData.get("Quoted_Items");
+if(quotedItems == null || quotedItems.isEmpty())
+{
+	return;
+}
+normalItems = List();
+optionalItems = List();
+for each  item in quotedItems
+{
+	isOptional = ifNull(item.get("Optional_Item"),false);
+	id = item.get("id");
+	if(isOptional == true || isOptional == "true")
+	{
+		item.put("id",id);
+		item.remove("Sequence_Number");
+		optionalItems.add(item);
+	}
+	else
+	{
+		item.put("id",id);
+		item.remove("Sequence_Number");
+		normalItems.add(item);
+	}
+}
+reorderedItems = List();
+reorderedItems.addAll(normalItems);
+reorderedItems.addAll(optionalItems);
+updateMap = Map();
+info reorderedItems;
+updateMap.put("Quoted_Items",reorderedItems);
+// updateMap.put("Quoted_Items",reorderedItems);
+// updateMap.put("Subject","name of mine");
+// upaterecord=zoho.crm.v8.createRecord("Quotes",updateMap);
+// info upaterecord;
+dlis = List();
+dlis.add(updateMap);
+m = Map();
+m.put("data",dlis);
+info m;
+update = invokeurl
+[
+	url :"https://www.zohoapis.in/crm/v8/Quotes/" + recordId
+	type :PUT
+	parameters:m + ""
+	connection:"hellokar"
+];
+info "Update : " + update;  
+14/07/2026
+
+-> The attachments :  When we try to fetch the attachments via related records API , we only get ID, file id and some details , but if we need to get the complete details we need to make use of get related records integration task.  dID = "517970000025734032";
+info zoho.crm.getRelatedRecords("Attachments","Contacts",dID);  And refer the code : Downloadattachmentsandputintoworkdrive  To move the attachments from Zoho CRM to work drive specific folder.  -> Sign mail merge API in Zoho crm:
+
+When we use the above API, then we get in the response one URL , access the URL and check if the people has actually signed and other things.  And there will be related list as “Sign documents “ and you can see the specific sign when you trigger the API .  And there is also button 
+
+->Client script Data time :  When we try to get the data time field from the field of CRM, then that will be of some other format, so we need to make use of the below code and convert it into specific date format , so that we can use it for date time objects.  function parseDate(dateString) {
+    if (!dateString) return null;
+
+    const [day, month, year] = dateString.split("-").map(Number);
+
+    return new Date(year, month - 1, day);
+}  And the above only works if the date that has got from CRM is in the specific format: 22-12-2026
+
+->Remember this code.  
+
+destFields = ["Naam", "Factuur_Adres", "Factuur_postcode", "Factuur_plaats", "Facturatie_e_mail"];
+
+Srcfields = ["Account_Name", "Adres.", "Postcode", "Plaats", "E_mail"];
+for each field in Srcfields
+{
+	if(edited.containKey(field))
+	{
+		editedField = field;
+		ind = Srcfields.indexOf(field);
+		break;
+	}
+}
+if(editedField)
+{
+rec = zoho.crm.getRecordById("Accounts",accid);
+mp=map();
+mp.put(destFields.get(ind),ifnull(rec.get(field),""));
+info mp;
+upd = zoho.crm.updateRecord("Accounts",accid,mp);
+}
+
+In argument mapping, map edited with #Execution info >> Previous Values.
+
+map accid with #Accounts >> Account id.
+
+-> Widget ( important soms)  When a widget is configured via button click to get the current user and send it to a standalone function , then the current user would be of super admin or the person who has configured the widget in the first place. 
+ -> Use the below code to do a line break in the show alert function in client script.  ZDK.Client.showAlert("Hello there \n I am on a second line");
+
+-> We cannot use line breaks using return statement in button function in deluge . The only way is to make use of client script for the line breaks .  -> Map dependency fields: now the feature is changed , using map dependency we can also map multiselect picklist  fields as well. As the parent field should be single picklist field but the child field can be multiselect pickliest field.  -> Widget POP up close method : Ticket ID; #164259915  I see that they are using the window.open() method to open the Zoho Creator form, which causes it to open in a new browser tab/window. 
+Because of this, ZOHO.CRM.UI.Popup.close() cannot be used to close the newly opened tab or window. That API only closes the CRM widget popup itself and works when the content is loaded directly inside the widget. Since the Creator form opens in a separate browser context, it cannot be controlled using ZOHO.CRM.UI.Popup.close(). 
+As a workaround, you can build the form directly inside the CRM widget using HTML and submit the data to Zoho Creator via the Creator API. Once the API call completes successfully, you can close the CRM widget by calling ZOHO.CRM.UI.Popup.close().  Widget code is added in the Github
+
+-> API Custom connection ( very important )  Ticket ID: #164254104
+
+Custom connection:  
+￼
+
+￼
+
+ 
+￼
+
+And to test this custom connections and every thing, we need to use the below custom connections public url.  https://manage.auth0.com/dashboard/us/dev-80b5r7fbghe8yn4l/  Please go to create application and then choose regular web application to test and take the client ID, client secret and every thing from here and use it in CRM
+ Under my app-> Settings -> you will be able to see the client ID, client secret and every thing, and when you scroll down -> you can see the under advanced settings we get Oauth token Url and everything.
+ -> Important Soms Widget for uploading the file upload and moving it to some other 3 rd party .  Hello Team,
+
+Use case: I am getting the file from 3 rd party end into widget and use that file to attach in attachments in Zoho crm section 
+Uploading files directly to Zoho CRM through a widget is not supported because the invoke connection method does not support form-data. However, the following workaround can be suggested. 
+Upload File API: https://www.zohocrm.dev/explore/widgets/v1.5/ZOHO_CRM_API#uploadFile 
+Use the uploadFile method to upload the file and obtain the file ID from the response. Then, pass the returned file ID as an argument to a Zoho CRM function. The function should download the file using the file ID and then either: 
+->Upload the file to WorkDrive, or
+->Update the file in the CRM Attachments related list or a File Upload field. 
+Please note that there is no direct approach to upload a file to WorkDrive from a widget.
+The function can be invoked using either the execute function API or the ZRC method. 
+Execute Function API: https://www.zohocrm.dev/explore/widgets/v1.5/ZOHO_CRM_FUNCTIONS#execute 
+Function Logic: Pass the file ID returned by the uploadFile API as an argument to the function. The function should contain the complete logic to download the file using the file ID and then upload it to WorkDrive or update it in the CRM File Upload field/Attachments related list. 
+Thank you
+
+-> blueprint:  If a record is in blueprint and if we try to update by updaterecodintegrationtask, then it updates the fields, but cannot update the stage Feld if the blueprint is set on stage field, as it shows the error as “ record is in blueprint and cannot be updated”
+
+But the stage that is in blueprint can be updated by worklflow rules without any error.  Should try with API ( ?)  ->On before mandatory form save :  If a record is in blueprint and 
+
+
+->Very Important widget : https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/crm-deluge/requests/details/205219035231767936
+
+
+03/07/2026
+
+-> When the credentials of login user ID is enabled , the field value will be updated to “Yes”, but each and every user needs to revoke and reauthorise again in order to make sure it work. The “yes” does not mean they are reauthorised , they need to connect again
+
+-> Update connected records v9 API Sample code:  asd=invokeurl
+    [
+    	url: "https://www.zohoapis.in/crm/v9/Calibration/517970000026363006"
+    	type: GET
+    	connection:"hellokar"
+    ];
+	
+	info asd;
+	
+	bb=asd.get("data").get(0);
+	
+	info bb;
+	
+	bb.put("Connected_To__s",{"module":{"api_name":"Leads"},"id":"517970000026276019"});
+	
+	info asd;
+	
+// 	updat=invokeurl
+//     [
+//     	url: ""
+//     	type: <request_type>
+//     	parameters: <expression>
+//     	headers: <expression>
+//     ];
+
+	
+	response = invokeurl
+	[
+		url: "https://www.zohoapis.in/crm/v9/Calibration"
+		type: PUT
+		parameters: asd.toString()
+		connection: "hellokar"
+	];
+	info response; 
+-> Set criteria important method:  So, when used the below code.  var Product = ZDK.Page.getSubform("Ordered_Items").getField("Product_Name");
+Product.setCriteria("(Product_Category:equals:" + value + ")", { filterOnSearch: true });
+
+So, when used the above code,
+ Product_Category is a Picklist field in the Products module. The problem is that if the category is "Palak", the lookup also returns products whose category is "Palak Patta". The equals operator behaves like a contains or prefix match instead of an exact match.  So, in order to have this sorted,   To avoid this suggest user to  use coql api  using connections method
+
+get the  record ids from the response and  form an array
+
+and set it as criteria
+
+field_obj.setCriteria("((id:in:idarray))");
+
+-> For notes update :  When a note is created by a button , then if we want to update the newly created note by the user who has created by clicking on custom button, then we need to create a connection and enable the credentials of login user so that the person who has enabled will be as the note owne3r
+
+-> To add tax in client script :  ZDK.Page.getSubform('Invoiced_Items').getRow(index).getCell('Tax').setValue([{ "name": "CGST", "percent": 15}]);  Make sure that the specific tax is added for the product and disable automatically tax add feature when the product is added.  -> Credentials of Login user ID:  So, when the credentials of login user is enabled, all the other users needs to reauthorise the connection. And if one user does reauthorise then it will not work.
+
+->Webhook call from Zoho writer merge and store   	
+	data_map = Map();
+data_map.put("data",merge_fields);
+merge_details = Map();
+merge_details.put("merge_data",data_map);
+
+output_settings = Map();
+output_settings.put("doc_name",var_invoice);
+output_settings.put("folder_id","n9zpj4d34a9296a194e2a8fd14a0852bd60ba");
+output_settings.put("format","pdf");
+
+var_api_key = "1003.ad7995ae88d2e9a56074b823e0712e13.2c6fcd76471cf16c2011e9dd8de730b6";
+optional_settings = Map();
+
+optional_settings.put("webhook_info",{"url":"https://www.zohoapis.eu/crm/v8/functions/SA_AVIS_Attach_and_Send_Invoice/actions/execute?auth_type=apikey&zapikey=" + var_api_key});
+
+doc = zoho.writer.v2.mergeAndStore(var_doc,merge_details,output_settings,optional_settings,"writercrm");
+info "Writer v2 initial response: " + doc;   The below is the API help doc for the above one:  https://www.zoho.com/deluge/help/writer/merge-and-store-v2.html
+
+->Widget:  From a widget when a function is called, then who triggered the function is the person who has configured the widget. Let’s say a widget is configured in a button and the same widget is calling another function in CRM, so when a button is clicked , then the widget configured users will taken as also the function trigger.  -> Calling a function from another function:  Lets say a standalone function is called from an Automation function, so the standalone function argument mapping should be “crmAPIRequest” with map or string.  The same can go for automation function calling from any 3 rd party end. So, the argument mapping should be “crmAPIRequest”
+
+-> Change Discount via client script on cell change action   if (field_name == 'List_Price') {
+    var product = ZDK.Page.getSubform('Ordered_Items').getRow(index).getCell('Product_Name').getValue();
+    console.log("product", product);
+
+    var id = product.id;
+
+    var lead = ZDK.Apps.CRM.Products.fetchById(id);
+    var unitPrice = lead.Unit_Price;
+    console.log("unitprice", unitPrice);
+
+    var listPrice = value;
+    if (unitPrice > 0) {
+        var discountPercent = ((unitPrice - listPrice) / unitPrice) * 100;
+        console.log("discountPercent", discountPercent);
+        var discountAmount = unitPrice - listPrice;
+        console.log("discountAmount", discountAmount);
+        ZDK.Page.getSubform("Ordered_Items").getRow(index).getCell("Discount").setValue( discountAmount );
+ 
+    }
+}  -> Sample Invoke connector method:     workflow_map = Map();
+        workflow_map.put("WORKFLOW_RULE_NAME",ruleNamePlaceholder);
+        workflow_map.put("WORKFLOW_RULE_DESC","Created dynamically on Start Export");
+        workflow_map.put("WORKFLOW_MODULE_NAME",zoho_object);
+        workflow_map.put("WORKFLOW_Execute_When",executeWhenMap);
+        workflow_map.put("CRITERIA_GROUP_ARRAY",criteriaValue);
+        workflow_map.put("Webhooks_ID",webhook_id);
+        info "workflow_map---->"+ workflow_map;
+        response = zoho.crm.invokeConnector("netcore0.zohocrm0.zoho_crm_automation",workflow_map);
+  In the above invoke connector method , this line: netcore0.zohocrm0.zoho_crm_automation is an extensions which is created in platform and they use this extension to create some thing in CRM. I mean rather than writing code for each task, they already write the code and store it in extension, and use the invoke url to call the extension and create.  Widget very very important:
+
+￼
+  I got this now:
+ So, first we cannot update the code and test it as the previous way we usually test.  Now, once we have the code then don’t update it. Goto terminal and ls, and cd mytestwidget , and then create a new project using zet init and choose the service as Zohocrm and enter the project name , so a new project will be created.  Now, goto that specific new project that is being created using manually within the folders from downloads and click on Apps -> and then choose widget.html and open it in the VS Code . Once done , replace  the code within that . And in vs code click on ctrl+save.  Once this is done , goto the specific folder within terminal, i.e ls , cd mytestwidget and cd {newwidgetfolder} and then click on zet validate and  zet pack. And then a Dist fiolder will be created in that {newwidgetfolder}. Now, goto CRM and open the widget and configure new-> and then choose the new folder from file upload under Dist folder zip file and use it.  -> To tag a specific user they need to format the note content code in the below specific format ,so that the email will be automatically sent to the user.  Sample code:  note1 = Map();
+note1.put("Note_Title",
+"Contacted");
+note1.put("Note_Content",
+"hello keke crm[user#517970000021363367#60065054850]crm may be doing some thing on my goddddd");
+note1.put("Parent_Id",
+{
+    "module": {
+        "api_name": "Leads"   
+    },
+    "id": "517970000026465035"
+});
+dataList = List();
+dataList.add(note1);
+params = Map();
+params.put("data",dataList);
+response = invokeurl
+[
+	url : "https://www.zohoapis.in/crm/v8/Notes"
+	type :POST
+	parameters:params.toString()
+	connection: "hellokar"
+];
+info response;
+
+
+->Creator form widget ticket : #164934127
+
+-> Client script for each loop:  // Case - Edit Page - On Save
+
+var caseStage = ZDK.Page.getField("Case_Stage_New").getValue();
+var requirementComplete = ZDK.Page.getField("Requirement_complete").getValue();
+
+if (caseStage === "Pending Retainer Invoice" && requirementComplete === true) {
+
+    var fieldsToCheck = [
+        "Medical_Records_URL",
+        "Mobile",
+        "Principal_Attorney",
+        "Mailing_Zip",
+        "Date_of_Incident",
+        "Date_of_Birth",
+        "Report_Due_Date",
+        "Case_Manager_Name",
+        "Case_Manager_Email",
+        "Case_Info_Name",
+        "Plan_type"
+    ];
+
+    var emptyFields = [];
+
+    fieldsToCheck.forEach(function(fieldAPIName) {
+
+        var fieldValue = ZDK.Page.getField(fieldAPIName).getValue();
+
+        if (
+            fieldValue === null ||
+            fieldValue === undefined ||
+            fieldValue === ""
+        ) {
+            emptyFields.push(fieldAPIName);
+        }
+    });
+
+    if (emptyFields.length > 0) {
+
+        // Stop the save
+        ZDK.Client.showAlert(
+            "The following fields are missing:\n\n" +
+            emptyFields.join("\n")
+        );
+
+        return false;
+    }
+}
+
+return true;  Also for each can also written in the below way:  fieldsToCheck.forEach((field) => { ZDK.Page.getField(field).getValue(); });  "The following fields are missing:\n\n" + emptyFields.join("\n")  The above line will print as the below way.  The following fields are missing: 
+
+Mobile 
+Principal_Attorney 
+Case_Manager_Email  So, \n means break the line one , 2 \n means break the line twice 
+
+-> Very Important on merge and store and all the writer .  #164926103
+
+Also this: #164438092 
+-> Merge and Store Zoho Writer API.  Mergeandstorezohowriterapi( function in my test account )
+
+-> Slyte UI in order to redirect to specific custom view in a web tab ticket ID: #164871505 
+-> When I call a standonle function rest API , then the incoming JSON payload should be of limit of 95000 characters.  -> If we get this error in client script then we need to give the permissions of the module to the specific profile as well.
+￼
+-> Bulkwrite API’s does not support to trigger workflows, as it is mentioned in the help doc.  So, as a workaround, they can create any date time field in CRM and update this date time field to the current time when the bulk write is done .
+ 
+And set up a workflow on date time field after 5 minutes in order to trigger the workflow .
+
+
+-> using fields of lookup only the upcoming records will be updated when the lookup is associated , so in order to have this done for previous records as well, then they need to export and import the records so while importing it updates the lookup , so fields of lookup will gets worked.
+
+-> We can do base 64 encoding and decoding and send the file to 3 rd party or attach it to attachments  https://www.zoho.com/deluge/help/encryption-tasks/base-64-decode.html
+
+->Using Webhooks , they can push or execute a custom standalone function inside CRM by enabling the REST API, so they can pass the parameters as well from webhook as an inputs to a custom function. But the response of function execution cannot be sent back with return statement, as in order to solve this, they need to again use invoke url within the function to move the data to their application
+
+-> If want to auto refresh in client script, then they can set up a script on detail page -> on a specific field -> Field event -> On before update -> and then use it to auto update , example disable the s  Check box 2:  Option 1: The No-Code Workflow & Helper Field (Best for Standard/Pro Editions)
+This approach uses two workflows and a hidden custom field to act as a "Kill Switch" for the scheduled emails.
+Step 1: Create a Helper Field
+* Create a custom Checkbox field in the Leads module called Record_Touched (or similar).
+* Set its default value to false. You can hide this field from the page layout so it doesn't clutter the UI.
+Step 2: Create Workflow 1 (The Kill Switch)
+* Trigger: On a record action -> Edit.
+* Criteria: None (Executes for all Leads).
+* Action: Field Update -> Set Record_Touched to true.
+Step 3: Create Workflow 2 (The Drip Sequence)
+* Trigger: On a record action -> Create or Edit.
+* Criteria: Record_Touched is false.
+* Crucial Step: Because you selected "Create or Edit", an option will appear below the criteria. You must check the box that says: "Cancel scheduled actions if the record no longer meets the criteria."
+* Actions:
+    * Instant Action: Send Email 1.
+    * Scheduled Action 1: 15 Minutes -> Send Email 2.
+    * Scheduled Action 2: 30 Minutes -> Send Email 3.
+How it works: When the Lead is created, it meets the criteria (Record_Touched is false), so Email 1 fires, and Emails 2 and 3 are queued. If a user edits the Lead, Workflow 1 instantly sets the checkbox to true. Because Workflow 2 is set to cancel actions if the criteria fails, Emails 2 and 3 are immediately wiped from the scheduled queue.
+
+
+->Zoho CRM And Zoho Books integration:  The accounts that is present in CRM will get synced in Books as a customer( contacts). So, when we want to create a record in books, the customer ID needs to be passed as a mandatory, so we search the contacts in Zoho Books using Account ID and use its contact ID to create a record.  Please refer the bel:ow sample code.  Sample code;  orgId = "60027733116";
+quoteId = "517970000026202157";
+// 2. Fetch the Quote record from CRM
+// 2. Fetch the Quote record from CRM
+quote = zoho.crm.getRecordById("Quotes",quoteId.toLong());
+// 3. Fetch the corresponding Customer in Zoho Books
+// CRM Quotes map to Accounts. We need the Books internal customer_id.
+accountObj = quote.get("Account_Name");
+customerId = "";
+if(accountObj != null)
+{
+	crmAccountId = accountObj.get("id");
+	// NOTE: Adjust .eu to .com or .in if your account is in a different data center
+	booksContacts = invokeurl
+	[
+		url :"https://books.zoho.in/api/v3/contacts?organization_id=" + orgId + "&zcrm_account_id=" + crmAccountId
+		type :GET
+		connection:"zohobooks"
+	];
+	info booksContacts;
+	if(booksContacts.get("contacts") != null && booksContacts.get("contacts").size() > 0)
+	{
+		customerId = booksContacts.get("contacts").get(0).get("contact_id");
+	}
+}
+if(customerId == "")
+{
+	info "Matching customer not found in Zoho Books. Please ensure the CRM Account is synced.";
+	return;
+}
+// 4. Format the Line Items
+lineItems = List();
+products = quote.get("Product_Details");
+for each  prod in products
+{
+	item = Map();
+	item.put("name",prod.get("product").get("name"));
+	item.put("description",ifnull(prod.get("product_description"),""));
+	item.put("rate",prod.get("list_price"));
+	item.put("quantity",prod.get("quantity"));
+	item.put("discount",prod.get("Discount"));
+	/* Note: Passing Tax by name directly can fail if it doesn't perfectly match Books. 
+           If you use taxes, you generally need to map the "tax_id". Uncomment below if you want to test by name: */
+	// item.put("tax_name", prod.get("Tax")); 
+	lineItems.add(item);
+}
+// 5. Format Billing & Shipping Addresses
+billingAddress = Map();
+billingAddress.put("address",ifnull(quote.get("Billing_Street"),""));
+billingAddress.put("city",ifnull(quote.get("Billing_City"),""));
+billingAddress.put("state",ifnull(quote.get("Billing_State"),""));
+billingAddress.put("zip",ifnull(quote.get("Billing_Code"),""));
+billingAddress.put("country",ifnull(quote.get("Billing_Country"),""));
+shippingAddress = Map();
+shippingAddress.put("address",ifnull(quote.get("Shipping_Street"),""));
+shippingAddress.put("city",ifnull(quote.get("Shipping_City"),""));
+shippingAddress.put("state",ifnull(quote.get("Shipping_State"),""));
+shippingAddress.put("zip",ifnull(quote.get("Shipping_Code"),""));
+shippingAddress.put("country",ifnull(quote.get("Shipping_Country"),""));
+// 6. Build Custom Fields (Accounting Period & Agreed Transactions)
+customFields = List();
+if(quote.get("Accounting_Period") != null)
+{
+	customFields.add({"label":"Accounting_Period","value":quote.get("Accounting_Period")});
+}
+if(quote.get("Agreed_Transactions") != null)
+{
+	customFields.add({"label":"Agreed_Transactions","value":quote.get("Agreed_Transactions")});
+}
+// 7. Construct the Main Estimate Payload
+estimateMap = Map();
+estimateMap.put("customer_id",customerId);
+//     estimateMap.put("estimate_number", quote.get("Quote_Number"));
+// Zoho Books Estimates do not have a standard "Subject" field, so mapping it to Reference Number instead
+estimateMap.put("reference_number",quote.get("Subject"));
+estimateMap.put("expiry_date",quote.get("Valid_Till"));
+estimateMap.put("line_items",lineItems);
+estimateMap.put("billing_address",billingAddress);
+estimateMap.put("shipping_address",shippingAddress);
+estimateMap.put("adjustment",quote.get("Adjustment"));
+estimateMap.put("terms",ifnull(quote.get("Terms_and_Conditions"),""));
+if(customFields.size() > 0)
+{
+	estimateMap.put("custom_fields",customFields);
+}
+// 8. Check if Estimate already exists (Update vs Create)
+subjectEncoded = zoho.encryption.urlEncode(quote.get("Subject"));
+searchEst = invokeurl
+[
+	url :"https://books.zoho.in/api/v3/estimates?organization_id=" + orgId + "&reference_number=" + subjectEncoded
+	type :GET
+	connection:"zohobooks"
+];
+info searchEst;
+estimatesList = searchEst.get("estimates");
+if(estimatesList != null && estimatesList.size() > 0)
+{
+	// Estimate exists -> UPDATE
+	estId = estimatesList.get(0).get("estimate_id");
+	updateResp = invokeurl
+	[
+		url :"https://books.zoho.in/api/v3/estimates/" + estId + "?organization_id=" + orgId
+		type :PUT
+		parameters:estimateMap.toString()
+		connection:"zohobooks"
+	];
+	info "Update Response: " + updateResp;
+}
+else
+{
+	// Estimate does not exist -> CREATE
+	info estimateMap;
+	createResp = invokeurl
+	[
+		url :"https://books.zoho.in/api/v3/estimates?organization_id=" + orgId
+		type :POST
+		parameters:estimateMap.toString()
+		connection:"zohobooks"
+	];
+	info "Create Response: " + createResp;
+}
+
+-> Date field update using client script.  function updateBirthdayCS1() {
+    console.log("updateBirthdayCS1 triggered");
+    var dateValue = ZDK.Page.getField("Date123").getValue();
+    var monthValue = ZDK.Page.getField("Month123").getValue();
+
+    if (dateValue && monthValue) {
+        
+        var monthMap = {
+            'January': '01', 'February': '02', 'March': '03',
+            'April': '04', 'May': '05', 'June': '06',
+            'July': '07', 'August': '08', 'September': '09',
+            'October': '10', 'November': '11', 'December': '12'
+        };
+
+        var monthNum = monthMap[monthValue];
+
+        if (monthNum) {
+            // Trim and pad the day with a leading zero if needed
+            var day = String(dateValue).trim().padStart(2, '0');
+            
+            // The year you want to append
+            var dummyYear = "2026"; 
+            
+            // Constructs the string exactly as requested: DD/MM/YYYY
+            var birthday = day + "/" + monthNum + "/" + dummyYear;
+            
+            console.log("Setting birthday string to:", birthday);
+
+            ZDK.Page.getField("Birthday_CS1").setValue(birthday);
+        }
+    } else {
+        // Clear the field safely if inputs are missing
+        ZDK.Page.getField("Birthday_CS1").setValue(null); 
+    }
+}
+
+updateBirthdayCS1();
+
+-> Refresh and Access token  So if they want to revoke the refresh token and make use of fresh one . Then they can delete the Self client that they have created and create a new one . Once done , they can make use of revoke refresh token , to revoke the existing one and make use of new one  https://www.zoho.com/crm/developer/docs/api/v8/revoke-tokens.html
+
+->Widget Sendmail API:  If they used, zoho.loginuserid, while calling function in widget, it is by default taking superadmin user email as from email.
+
+Is enabling the user credentials as viable solution for them so that they can send the email whenever the logged in user click on the button, the mail needs to be sent from the logged in user email  Ans: I see that they are using the sendmail Deluge task. In this case, the From address will be the email address of the user who configured or owns the widget. Since the Super Admin configured it, the From address defaults to the Super Admin's email.
+ 
+The recommended approach is to create a widget that uses the Send Mail API instead of the Deluge sendmail task. Then, configure the API connection and enable the logged-in user's credentials for that specific connection. This will allow the email to be sent from the email address of the user who clicks the button, provided they have the necessary permissions and authorization.
+  Ticket ID: 163775971  -> Get File content:  https://www.zoho.com/deluge/help/file/get-file-content.html
+
+Using Get File content we can retrieve the contents of the file that is in : .txt, .csv  , but not the files that are in .pdf and word.  This is important : to achieve for .pdf and word, then can make use of Catalyts application.  The entire ticket details are given here:  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/partner-support/requests/details/205219035044221496  ->3. Can we use setTimeout() in Client Scripts.  -> Line breaks in client script:  I see that they are using a custom button with a return statement. The return statement does not support line breaks in the displayed message.
+ 
+Instead, they can use a Client Script to display the message, as it supports line breaks and allows the content to be formatted more effectively.
+ ZDK.Client.showAlert("Hello there \n I am on a second line");
+
+Even if we enable the line break for the Zoho CRM org - 751191912, line break will not render in the info message or button response.
+
+Currently \n will only works on the multi-line field. Kindly confirm if we still need to enable the line break in the CRM org.
+
+
+As for breaking line in the button response (pop-up), kindly check with CRM end for any possibilities to achieve this.
+
+-> Integration tasks”  I see that they are using the v2 integration task methods to retrieve and update the Quote record.
+Please note that the v2 integration task methods do not support updating custom fields in the Quotes line items. To update custom fields in Quoted_Items, they will need to use the v8 REST API.
+ 
+Also, when retrieving Quote records using the v2 integration task methods, the line items are returned with the API name Product_Details. This is the API structure used by the v2 integration tasks.
+ 
+Please ask them to retrieve the Quote record using the v8 REST API instead. The v8 API returns the correct subform API name, Quoted_Items, which includes the custom fields and can be used to update them.
+
+-> Scheduled function logic:  I want to process first 2000 records in day 1 and another 2000 records at day 2 in this the fetching should happen.  A solution for this: They can use a custom checkbox field for this requirement. We suggest creating a custom view with a condition that includes only records where the checkbox is unchecked.
+The scheduled function can then fetch records from this custom view and, after processing each record, update the checkbox field to checked. Since the processed records no longer meet the custom view criteria, they will not be fetched again in subsequent scheduler runs. As a result, only new or unprocessed records will be retrieved during future executions.  Rather an important method can be used:  So , use COQL pagination , and try fetching like first 2000 records , and in the pagination you can enter the another. Number like 2,4,6.  Here is the sample code:  loop = {0,2,4,6,8,10,12};
+for each  ele in loop
+{
+	fromindex = ele * 1000;
+	// 1. Build the v8 COQL Query using the 'LIMIT offset, limit' syntax
+	queryMap = Map();
+	query = "select id from Tasks where (Subject!=null) limit " + fromindex + ", 2000";
+	queryMap.put("select_query",query);
+	info "Fetching 2000 records starting at offset: " + fromindex;
+	// Note: Change .com to .in or .eu if your customer's CRM is hosted on a different data center
+	coql_response = invokeurl
+	[
+		url :"https://www.zohoapis.in/crm/v8/coql"
+		type :POST
+		parameters:queryMap.toString()
+		connection:"coql"
+	];
+	info coql_response;
+
+So, in the above method we can make change the numbers within the loop , so at first it would be 0,2 and then run just for 4,6 and then 8,10. So, using the above way we can do the pagination for as many records with out concerning about timeout error.  
+
+-> Test this notification API.  https://www.zoho.com/crm/developer/docs/api/v8/notifications/enable.html  Ticket : https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/partner-support/requests/details/205219035202417855  -> Some thing but important:  They need to convert the uploaded image into a downloadable URL. One way to achieve this is by uploading the image to Zoho WorkDrive and obtaining a downloadable URL for it. They can then use this URL to download the file within the CRM function and attach it to the required CRM record.
+
+->We cannot create subform using API. As they need to manually create it.
+ ->Px wants to create a task for the leads created via SalesInbox. However, we do not have any direct option to differentiate the lead created via salesinbox. we informed them to avail the picklist value in the quick create and create a lead. but they need to update it each time, which they do not require and a tedious process. so is there a way via CRM API to detect the leads from salesinbox?  Ans:Please enable GDPR and once done when a record is created from sales Inbox , the lead source will be automataically updated to "Sales Inbox" and that can be used as a condition within workflow
+
+-> Refresh and access token in Sandbox:  Athe Sandbox rebuild automatically revokes existing Refresh Tokens and Access Tokens. As because the tokens are tied to organisation , when rebuild it completely makes new environment
+
+-> Reload the page using functions:  Rather they can open the URL of the page as that automatically update the page.
+ return openUrl("https://crm.zoho.in/crm/abcdefg/tab/Invoices/" + invoiceId + "?pfrom=gsearch","same window");  Note that , this works only in buttons , because in buttons there will be return statement so in return we need to paste it.
+
+-> Refer this proper function.  https://www.zoho.com/deluge/help/functions/string/proper.html
+
+->In the list view when the phone field is masked the call icon is still visible.
+
+Is there any possibility to disable the call icon in the list view?  Ans: Use freeze column method. 
+https://www.zohocrm.dev/explore/client-script/clientapi/List?features=CSCRIPT_SUBFORM_EVENTS#freezeColumns
+
+-> Preview PDF file issue:  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/partner-support/requests/details/205219035286732667  ->If any thing is possible via function , but cx is in professional edition, then enable the enterprise trial and execute the function and move back to professional edition
+ ->Should post in My team.  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/zoho-crm/requests/details/205219034649962814  -> Check this.  https://www.zoho.com/deluge/help/sftp-task.html  -> Check this:  #164871505
+
+-> Supported Time Zone conversions:  https://www.zoho.com/deluge/help/limitations/time-zones.html  https://cliq.zoho.in/company/60002085329/chats/CT_1797729537748465571_60002085329-T-1207137668608072507/messages/1786962761331_34616103765  ->Widgets in Portals:  Are they executing the widget from Portals ?  There is no method to over ride it bro. They need to trigger the function within the widget code itself bro.
+
+https://www.zohocrm.dev/explore/widgets/v1.5/zrc_code_samples#get_current_user  Ticket : 165577523
+
+-> Post in my team:  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/all/requests/details/205219035523465487  ->Sure. If there are three Contacts with the same email address but associated with different Accounts, and the same Account is entered in the Company field of the Lead, then during conversion, the system will automatically prompt the user to associate the Lead with the existing Contact that is associated with the same Account.
+  -> this is a miracle:   Cx has configured a script to update a UNIX value to datetime with in a flow in ZFlow.
+
+The flow execution shows the right datetime for the UNIX in output, but in ZCRM, the date field mapped is updated with future date instead of the flow result.  string unixToDateTime(string timestamp)
+{
+// unixTimestamp = timestamp.toLong();
+// dateTimeObject = "01-Jan-1970 00:00:00".toTime().addSeconds(unixTimestamp);
+// info dateTimeObject;
+// val = toDateTime(unixTimestamp).toString("yyyy-MM-dd'T'HH:mm:ss");
+// info "val >>" + val;
+//return dateTimeObject.toString("yyyy-MM-dd'T'HH:mm:ss","Asia/Calcutta");
+unixSeconds = timestamp.toLong();
+unixMillis = unixSeconds * 1000;
+istTime = toDateTimeString(unixMillis,"yyyy-MM-dd'T'HH:mm:ss","Asia/Calcutta");
+val = istTime + "+05:30";
+info "val >> " + val;
+return val;
+}  Working code:     unixSeconds = timestamp.toLong();
+    
+    unixMillis = unixSeconds * 1000;
+    
+    utcTime = toDateTimeString(unixMillis,"yyyy-MM-dd'T'HH:mm:ss","GMT");
+    
+    val = utcTime + "+00:00";
+    
+    info "val >> " + val;
+    
+	return val;  This request: https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/all/requests/details/205219035571225762  ->Team i would like to know if its possible to search the subform field using api or coql, when i tried with both the method the function returns empty response  queryMap = {"select_query":"select  Product_Name, Quantity, List_Price, Discount, Tax, Net_Total from Purchase_Items where List_Price = 100 "};
+response = invokeurl
+[
+	url :"https://www.zohoapis.in/crm/v8/coql"
+	type :POST
+	parameters:queryMap.toString()
+	connection:"coql"
+];
+info response;
+
+-> Post in My Team :  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/all/requests/details/205219035593505711
+
+-> Post in My Team:  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/all/requests/details/205219035360216603  -> Set date field via Client script.  function updateBirthdayCS1() {
+    var dateValue = ZDK.Page.getField("Date123").getValue();
+    var monthValue = ZDK.Page.getField("Month123").getValue();
+
+    if (dateValue && monthValue) {
+        // Map full month name to month number
+        var monthMap = {
+            'January': '01', 'February': '02', 'March': '03',
+            'April': '04', 'May': '05', 'June': '06',
+            'July': '07', 'August': '08', 'September': '09',
+            'October': '10', 'November': '11', 'December': '12'
+        };
+
+        var monthNum = monthMap[monthValue];
+
+        if (monthNum) {
+            // Pad day with leading zero if needed
+            var day = String(dateValue).padStart(2, '0');
+            
+            // Format: YYYY-MM-DD (standard format Zoho date fields accept internally)
+            var birthday = "2050-" + monthNum + "-" + day;
+
+            // Set the Birthday_CS1 field
+            ZDK.Page.getField("Birthday_CS1").setValue(birthday);
+        }
+    } else {
+        // If either field is empty, clear Birthday_CS1
+        ZDK.Page.getField("Birthday_CS1").setValue("");
+    }
+}
+
+updateBirthdayCS1();
+
+-> The Layout field is not supported in the setCriteria method. As a workaround, you can create a new Custom View for the Products associated with the specific layout. You can then fetch the Products from this Custom View and use the setCriteria method. Please refer to the attached sample code for reference.
+
+var ab = await zrc.get('/crm/v8/Products?fields=Tax&cvid:517970000026979116');
+
+console.log("abc", ab);
+
+var asd = ab.data;
+console.log("asd", asd);
+
+var state = asd.data;
+console.log("state", state);
+
+var list = [];
+
+for (i = 0; i < state.length; i++)
+{
+    // console.log("bb", state[i].id);
+    list.push(state[i].id);
+}
+
+console.log("list", list);
+
+var productLookup = ZDK.Page.getField("Product");
+
+// Filter the lookup to show only records from the Products layout
+productLookup.setCriteria(
+    "(id:in:"+list+")",
+    { filterOnSearch: true }
+);
+
+
+->Meeting creation with Meeting Venu : Online and In - office.  Meeting Venu : online:  	remindertime = now.toTime("yyyy-MM-dd'T'HH:mm:ss").addMinutes(5).toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'");
+EventsMap = Map();
+EventsMap.put("Start_DateTime",remindertime);
+// EventsMap.put("What_Id",input.leadIdLong);
+EventsMap.put("$se_module","Leads");
+EventsMap.put("Event_Title","eventtitle");
+EventsMap.put("End_DateTime",now.toTime("yyyy-MM-dd'T'HH:mm:ss").addMinutes(30).toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'"));
+// EventsMap.put("Remind_At","5 mins");
+// EventsMap.put("All_day",true);
+// EventsMap.put("Meeting_Venue__s","In-office");
+EventsMap.put("Meeting_Venue__s","Online");
+EventsMap.put("Meeting_Provider__s","Zoho Meeting");
+EventsCreate = zoho.crm.v8.createRecord("Events",EventsMap);
+info EventsCreate;  Here in the above code , the Venu is only and the provider can be changed as per their wish , as of now the provider can be   meetingMap.put("Meeting_Venue__s","Online");
+meetingMap.put("Meeting_Provider__s","Microsoft Teams");  And we can also add:  EventsMap.put("Meeting_Venue__s","Online");
+EventsMap.put("Meeting_Provider__s","Zoho Meeting");  So, by this of Zoho meeting as a provider the Meeting url will be auto generated and will be listed besides participants , so when a invitation is sent to the participants , then this auto generated meeting link will also be sent.  
+Meeting venu : In -Office  	remindertime = now.toTime("yyyy-MM-dd'T'HH:mm:ss").addMinutes(5).toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'");
+EventsMap = Map();
+EventsMap.put("Start_DateTime",remindertime);
+// EventsMap.put("What_Id",input.leadIdLong);
+EventsMap.put("$se_module","Leads");
+EventsMap.put("Event_Title","eventtitle");
+EventsMap.put("End_DateTime",now.toTime("yyyy-MM-dd'T'HH:mm:ss").addMinutes(30).toString("yyyy-MM-dd'T'HH:mm:ss'+05:30'"));
+
+// Set Venue to Online
+EventsMap.put("Meeting_Venue__s","In-office");
+
+// DO NOT pass Meeting_Provider__s so it doesn't generate a new link
+// EventsMap.put("Meeting_Provider__s","");
+
+// Add the existing URL to the Description or standard Venue field
+existing_url = "https://your-existing-meeting-url.com/12345";
+EventsMap.put("Description", "Please join the meeting using this link: " + existing_url);
+EventsMap.put("Venue", existing_url);
+
+EventsCreate = zoho.crm.v8.createRecord("Events",EventsMap);
+info EventsCreate;  Here when we selected meeting venu as In - office then Location field will be enabled I mean Venu field , so we can paste the meeting link in that field , and when we add participants this link will be automatically sent to participants
+
+ -> Blueprint Bug Post  
+-> Email Keyword parameters in function 
+￼
+-> COQL Sample to fetch the records in a custom view.  	fromindex = 0;
+	// 1. Build the v8 COQL Query using the 'LIMIT offset, limit' syntax
+	queryMap = Map();
+	query = "select First_Name from Leads#517970000000029342 WHERE id is not null limit " + fromindex + ", 2000";
+	queryMap.put("select_query",query);
+
+	coql_response = invokeurl
+	[
+		url :"https://www.zohoapis.in/crm/v8/coql"
+		type :POST
+		parameters:queryMap.toString()
+		connection:"coql"
+	];
+	info coql_response;
+
+-> while creating a connection there are 2 Zoho CRM’s and one has access to some connections and others have access to other connections , it is better to have one connection rather than 2 -> POST in BuGS
+
+Associations: When a function is associated with any components such as button, workflow, kiosk ,blueprint, schedules then it will be shown under Associations  References: When a existing standalone function is being called by another function named A , then that A function will be shown under Refeences 
+
+When the existing standalone function is called by client using var response = ZDK.Apps.CRM.Functions.execute("Standalonewebhook"); then it is not listed I the references   Dependences: When a function that can be automation or anytype calls a other standalone function named B, then that B function will be listed under Dependences
+
+1. Associations (CRM Features) When a standalone function is linked directly to a CRM component—such as a Custom Button, Workflow, Blueprint, Schedule, or Kiosk—that component will be shown under the Associations tab.
+2. References (Inbound Deluge Calls) When your existing standalone function is called by another Deluge function (Function A) using standard syntax, Function A will be shown under the References tab. This tells you "who is calling me."
+3. Dependencies (Outbound Deluge Calls) When your function (whether automation or standalone) calls another standalone function (Function B), Function B will be listed under the Dependencies tab. This tells you "who I am calling."
+4. Exclusions (What the References Tab MISSES) The References static scanner has strict blind spots. Callers will NOT be listed in the References tab in these scenarios:
+* Client Scripts: When the standalone function is called by a client using JavaScript, such as: var response = ZDK.Apps.CRM.Functions.execute("Standalonewebhook");
+* External API Calls: When the function is triggered by an outside source (like a third-party app, a website, or Postman) using the REST API or an API Key.
+
+Exhaustive References Coverage
+
+The References tab strictly tracks native Deluge function-to-function calls. Other CRM features are tracked separately under the Associations tab. Based on this distinction, the classification is as follows:
+* INCLUDED: Function-to-function calls written in Deluge and helper functions written in Deluge are included in the References tab and will appear there.
+* EXCLUDED: Workflows, Blueprints, Schedules, Custom Buttons, and disabled CRM components are excluded from the References tab. However, these components are tracked separately under the Associations tab.
+* EXCLUDED: Widgets, Client Scripts, SlyteUI, externally hosted code, ZDK calls such as ZDK.Apps.CRM.Functions.execute, and ZOHO.CRM.FUNCTIONS.execute or equivalent calls are excluded from the References tab.
+Therefore, an empty References tab only indicates that no native Deluge function-to-function references are identified there; it should not be interpreted as proof that no other CRM component or external mechanism can invoke the function.
+
+Hello Team,
+Please use the attached code.
+Under Argument Mapping, map dealId to Deals → Deal Record ID.
+Thank you.
+ CS learnt by me:
+  var START_FIELD = "Log_Date_Time";
+var END_FIELD = "End_Date_Time";
+var DURATION_FIELD = "Duration";
+
+var startValue = ZDK.Page.getField(START_FIELD).getValue();
+var endValue = ZDK.Page.getField(END_FIELD).getValue();
+var durationValue = ZDK.Page.getField(DURATION_FIELD).getValue();
+
+var fieldName = field_name;
+
+
+
+    if (startValue && endValue) {
+
+        var startDate = new Date(startValue);
+        var endDate = new Date(endValue);
+
+        var differenceMilliseconds = endDate - startDate;
+        var differenceMinutes = differenceMilliseconds / (1000 * 60);
+        console.log("differenceMinutes", differenceMinutes);
+
+    }
+
+
+
+    console.log("Duration changed");
+
+    if (endValue && durationValue != null && durationValue !== "") {
+
+        var endDate = new Date(endValue);
+        var durationMinutes = parseFloat(value);
+
+        if (!isNaN(durationMinutes) && durationMinutes >= 0) {
+
+            var newStartDate = new Date(
+                endDate.getTime() - (durationMinutes * 60 * 1000)
+            );
+
+            console.log("Calculated Date:", newStartDate);
+            console.log("Calculated Date IST:", newStartDate.toString());
+
+            var months = [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ];
+
+            var formattedStartDate =
+                months[newStartDate.getMonth()] + " " +
+                newStartDate.getDate() + ", " +
+                newStartDate.getFullYear() + " " +
+                String(newStartDate.getHours()).padStart(2, "0") + ":" +
+                String(newStartDate.getMinutes()).padStart(2, "0");
+
+            console.log("Value being sent:", formattedStartDate);
+
+            var formattedDate =
+    newStartDate.getFullYear() + "-" +
+    String(newStartDate.getMonth() + 1).padStart(2, "0") + "-" +
+    String(newStartDate.getDate()).padStart(2, "0") + "T" +
+    String(newStartDate.getHours()).padStart(2, "0") + ":" +
+    String(newStartDate.getMinutes()).padStart(2, "0") + ":" +
+    String(newStartDate.getSeconds()).padStart(2, "0");
+
+console.log("Formatted Date:", formattedDate);
+
+            var abc = new Date(formattedStartDate);
+            console.log("abc", abc);
+            var lead = ZDK.Apps.CRM.xxx.fetchById($Page.record_id);
+lead.Start_Date_Time = formattedDate;
+            var response = ZDK.Apps.CRM.xxx.updateById(lead, $Page.record_id);
+            console.log("response", response);
+
+        }
+    }
+
+-> Salutation: Using client script we cannot update the salutation field , so they need to make use of API and update the salutation field , so using this , we can update in detail and edit page but not in create page
+
+ -> Learn this:  emptyMap = map(); query_data = Collection();
+	query_data.insert("fields": "Name,id");
+	platform_ActivitiesData = zoho.crm.v8.getRelatedRecords("Contacts", "Accounts", "517970000026738009", query_data,1,200,"hellokar");
+	//platform_ActivitiesData = zoho.crm.v8.getRecordById("Platform_Activities", "1752391000085205160",emptyMap,"dhcrm");
+	info platform_ActivitiesData;  -> We can set the set criteria method for user lookup field as well.  Code added in GitHub 
+
+->Is there a way to trigger a workflow daily?  We can use a date/time or a date field as when condition, and updating the same field under Instant action as Execution day +1 day.
+  
+￼
+
+ 
+￼
+
+
+->Zoho Desk and Zoho CRM :  Thanks for waiting. Using get related list API's we cannot fetch the Zoho desk tickets from deal record.
+ 
+Rather, they need to get the email of the contact that is associated with the deal record.
+ 
+And then search the desk tickets with that email to display the tickets .
+ Sample code;
+
+
+dealId = 517970000026927001;
+dealDetails = zoho.crm.getRecordById("Deals", dealId);
+contactNameMap = dealDetails.get("Contact_Name");
+
+if(contactNameMap != null)
+{
+    contactId = contactNameMap.get("id");
+    
+    
+    contactDetails = zoho.crm.getRecordById("Contacts", contactId);
+    contactEmail = contactDetails.get("Email");
+    
+   
+    orgId = 60027733410;
+    deskTickets = zoho.desk.searchRecords(orgId, "tickets", {"email": contactEmail}, 0, 10, "desssk");
+    
+    info deskTickets;
+}  And also the sync will be done in the same way. While creating a desk ticket, under contact choose the CRM contact with one email and create . And then under that contact in CRM the Zoho desk related list will show the tickets that has this contact associated. And if the contact is also associated to the deal , then it will also appear in deal record as well.  ->Button in client script:  In professional edition we can create one custom button , and using the custom button we can create a client script and trigger the client script on the button click.  -> Tag in functions:  The below line:  updd = zoho.crm.updateRecord("Contacts",cid,{"Next_Appointment":nd,"Appointment_Type":nextType,"Tag":{{"name":nextType}}});   "Tag":{{"name":nextType}}}  This will update the tag with the value. Let’s say there is a already a tag with the value: “hello” and I used the above code to update the tag to “hey”, so using the above integration task, it will update the tag bit not append it
+
+-> We can hide the timeline of a record using profile permissions
+
+-> Contacts has been created via Zoho Bookings
+
+However, the integration owner has been assigned as record owner, cx wanted the consultation owner from bookings to be assigned as contact owner  ( Sharma Zoho bookings test)  So, when a lead is created via Zoho bookings, the lead source will be Zoho bookings  -Zoho marketing automation pushing the data from Zoho crm.  Hi Team,
+
+Kindly assist with the below customer request regarding the Zoho Marketing Automation listsubscribe API.
+
+The customer is calling the Marketing Automation API from a Zoho CRM Deluge function using invokeurl and has OAuth authentication already configured.
+
+Endpoint:
+POST /api/v1/json/listsubscribe
+
+Their current implementation uses POST /api/v1/addleadsinbulk, which only adds the email address to the list. They want to use listsubscribe so that the contact's details are created/updated in Marketing Automation before/while subscribing the contact to the list.
+
+They need to pass the following details through the leadinfo parameter:
+  Code:”  leadInfo = Map();
+leadInfo.put("First Name", "Patricia");
+leadInfo.put("Last Name", "Boyle");
+leadInfo.put("Lead Email", "test@gmail.com");
+
+
+apiParams = Map();
+apiParams.put("resfmt", "JSON");
+apiParams.put("listkey", "204670000000028309");
+
+apiParams.put("leadinfo", leadInfo.toString());
+
+apiParams.put("sources", "Zoho CRM");
+
+headersMap = Map();
+headersMap.put("Content-Type", "application/x-www-form-urlencoded");
+
+response = invokeurl
+[
+    url : "https://marketingautomation.zoho.in/api/v1/json/listsubscribe"
+    type : POST
+    parameters : apiParams
+    headers : headersMap
+    connection : "marketingautomation"
+];
+
+info response;  Regarding whether the Phone field is supported in the leadinfo parameter and any restrictions on updating existing leads/subscribers, please check with the Zoho Marketing Automation team.
+
+-> Roll up summary fields cannot be embedded in Formula fields.
+
+
+-> test this: https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/crm-deluge/requests/details/205219036053429965
+
+-> Get cadences that is part of the record.  asd=zoho.crm.getRelatedRecords("Entity_Cadences_leads", "Leads", 517970000027848002);  API;  response = invokeurl
+[
+    url: "https://www.zohoapis.in/crm/v8/Leads/517970000027848002/Entity_Cadences_leads?fields=id"
+    type: GET
+    connection: "backup"
+];
+
+info response;
+  ->Search records API issue :  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/all/requests/details/205219035802075170  -> We can have custom button in the related list section as well. They need to select the records and click the button to execute the function.  Sample code:  info contact_id;
+var = contact_id.toList("|||");
+info var;
+for each  i in var
+{
+	info i;
+	
+	id=i.toLong();
+	up = zoho.crm.updateRecord("Contacts",id,{"Department":Dept});
+	info up;
+}
+return "";  -> To Show a conformation pop up in the page with data  and execute the function.  https://cliq.zoho.in/company/60002085329/chats/CT_1797729537748465571_60002085329-T-1795983350503920868/messages/1790700807315_55534019510  Kisok:  Alternatively, you can go with a Kiosk as well.
+ 
+Try configuring a Kiosk on the button click and merge the current record’s address fields into the Kiosk screen. 
+ 
+Add two buttons within the screen: Yes and No.
+If the user clicks Yes, execute the function from within the Kiosk. If the user clicks No, close the Kiosk with.
+  
+￼
+
+-> Delete Attachments in Notes API;  	cx=zoho.crm.getRelatedRecords("Notes","Leads",517970000028079002);
+	
+	info cx;
+	
+	
+	attachmentsList = zoho.crm.getRelatedRecords("Attachments", "Notes", 517970000028088011);
+	
+	note_id="517970000028088011";
+
+info attachmentsList;
+
+attachment_id = attachmentsList.get(0).get("id");
+        
+
+        api_url = "https://www.zohoapis.in/crm/v8/Notes/" + note_id + "/Attachments/" + attachment_id;
+        
+        delete_response = invokeurl
+        [
+            url : api_url
+            type : DELETE
+            connection : "hellokar"
+        ];
+		
+		info delete_response;
+
+-> A method to hide the pop up fields when the deal stage is closed won:  https://cliq.zoho.in/company/60002085329/chats/CT_1797729537748465571_60002085329-T-1796018529334784917/messages/1790025749375_67743863383
+
+-> When we try to download the txt files and convert it into setparam(file) in order to upload into ZFS , then the download will done and it does not give file , but it gives the content of the file , so we cannot set the param for this as a file . So, we will convert the downloaded txt file into tofie deluge integration task and then upload into ZFS  Sample code:  caseId ="517970000013918717";
+
+filelist = List();
+
+Attachments = zoho.crm.getRelatedRecords("Attachments","Cases",caseId);
+
+for each rec in Attachments
+{
+	attachmentId = rec.get("id");
+
+	// Download attachment from Case
+	response = invokeurl
+	[
+		url :"https://www.zohoapis.in/crm/v8/Cases/" + caseId + "/Attachments/" + attachmentId
+		type :GET
+		connection:"hellokar"
+	];
+
+	info response;
+	
+	response=response.toFile("abc.pdf");
+	
+	info response;
+
+	response.setParamName("file");
+
+	response = invokeurl
+	[
+		url :"https://www.zohoapis.in/crm/v8/files"
+		type :POST
+		files:response
+		connection:"sendfileszfs"
+	];
+
+	info response;
+
+	file12 = response.get("data").get(0).get("details").get("id");
+
+	info "file12: " + file12;  Calling a Standalone function methods:  	
+	standalone_function_values = standalone.Standaloneuser2("abcd");
+	
+	info standalone_function_values;
+	
+	response = zoho.crm.searchRecords("users", "(email:equals:reddynethra321@gmail.com)");
+	
+	info response;
+	
+	asd=invokeurl
+    [
+    	url: "https://www.zohoapis.in/crm/v7/functions/standaloneuser2_1/actions/execute?auth_type=apikey&zapikey=1003.d322b83bd86099c5eda125e4235f0bd9.c359fad1eeeda2fa262761e2324f19d0"
+    	type: GET
+    ];
+	
+	info asd; 
+-> Client script to update a lookup field within the subform:  var defaultLookup = {
+    id: "517970000012494147",
+    name: "sabari" 
+};
+
+ZDK.Page.getSubform('Test_of_subform').setValues([
+    {
+        'Product_lookup': defaultLookup
+
+    }
+]);
+
+
+-> Client script very important:  The Client Script’s read-only property works at the UI level. If the user tries to manually change the field value through the UI, the field will be locked and cannot be edited.
+ 
+However, if the value is updated programmatically through another Client Script or a custom function, the field value can still be changed because the update is performed programmatically bakend rather than through the UI.
+
+
+->There is mass change Owner API as well.  https://www.zoho.com/crm/developer/docs/api/v8/mass-change-owner.html  -> And also we can have a formulae inside another formulae. 
+-> To update scoring rule as a workaround please refer the below ticket:  https://crmplus.zoho.in/zohocorppace/index.do/cxapp/agent/zohocorp/zoho-one/requests/details/205219036083870298
+
+->Logical code need to learn:  salesOrder = zoho.crm.v8.getRecordById("Sales_Orders",soid);
+items = salesOrder.get("Ordered_Items");
+
+vendorItems = Map();
+
+for each item in items
+{
+	product = zoho.crm.v8.getRecordById("Products",item.get("Product_Name").get("id"));
+	vendor = product.get("Proveeder");
+
+	if(vendor != null)
+	{
+		vendorId = vendor.get("id");
+
+		if(vendorItems.get(vendorId) == null)
+		{
+			vendorItems.put(vendorId,List());
+		}
+		
+		info vendorItems;
+
+		poItem = Map();
+		poItem.put("Product_Name",item.get("Product_Name").get("id"));
+		poItem.put("Quantity",item.get("Quantity"));
+		poItem.put("List_Price",product.get("Unit_Price"));
+
+		as=vendorItems.get(vendorId);
+		
+		as.add(poItem);
+		
+		
+	}
+}
+
+info vendorItems;
+for each vendorId in vendorItems.keys()
+{
+
+	poData = Map();
+	poData.put("Vendor_Name",vendorId);
+	poData.put("Purchase_Items",vendorItems.get(vendorId));
+	poData.put("Subject",salesOrder.get("Subject"));
+
+	response = zoho.crm.v8.createRecord("Purchase_Orders",poData);
+
+	info response;
+}
+
+
+-> Custom connection every thing all :  Authentication type : 
+
+-> API key: The 3 rd party will have a default API key for their platform and using it, we can pass the API key and send the request.  -> Basic Authentication: It’s like password and user name , where we need to pass the parameter as a password and user name to accept the request
+
+->Oauth1, Oaith 2: The same principle 
+
+Parameter Type:  -> Query String: Suppose the API key needs to be passed as a Query String then it would be in this way:  The authentication value is added to the URL as a query parameter  GET https://api.example.com/customers?api_key=abc123xyz
+
+-> Header:  The authentication value is included in the HTTP request headers  GET https://api.example.com/customers
+api_key: abc123xyz
+-> Form Data:  Authentication parameters are sent in the HTTP request body as form-encoded data or multipart form data, depending on the configuration and API requirements.
+Example: URL-encoded form body
+
+POST https://api.example.com/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=APP123&client_secret=SECRET456
+
+2. Compare them side by side
+Feature	Query String	Header	Form Data
+Location	URL	HTTP headers	Request body
+Typical example	?api_key=123	x-api-key: 123	api_key=123 in body
+Common use	URL-based API parameters	API keys and authorization tokens	Form-encoded parameters
+Requires a request body?	No	No	Yes
+Main caution	Secrets can leak through URL logs	Must use the correct header name and format	Must match the expected body encoding
+
+Which one should you select?
+Use this simple guide:
+Choose Query String if the API documentation shows:
+https://api.example.com/data?api_key=YOUR_KEY
+
+Choose Header if it shows:
+Authorization: Bearer YOUR_TOKEN
+or x-api-key: YOUR_KEY.
+
+Choose Form Data if the API explicitly requires credentials or parameters in an application/x-www-form-urlencoded or supported multipart request body.
+
+-> lets see how deluge code will be based on query Striung, Header and Form Data
+
+Query String:  
+apiKey = "ABC123XYZ";
+
+response = invokeurl
+[
+    url: "https://api.example.com/users?api_key=" + apiKey
+    type: GET
+];
+
+info response;
+ The resulting url will be: https://api.example.com/users?api_key=ABC123XYZ
+ Header:  
+apiKey = "ABC123XYZ";
+
+headersMap = Map();
+headersMap.put("x-api-key", apiKey);
+
+response = invokeurl
+[
+    url: "https://api.example.com/users"
+    type: GET
+    headers: headersMap
+];
+
+info response;
+
+Form Data — parameter in the request body  
+formData = Map();
+formData.put("api_key", "ABC123XYZ");
+formData.put("status", "active");
+
+headersMap = Map();
+headersMap.put("Content-Type", "application/x-www-form-urlencoded");
+
+response = invokeurl
+[
+    url: "https://api.example.com/users"
+    type: POST
+    parameters: formData
+    headers: headersMap
+];
+
+info response;
+
+
+->Okay, what is the difference between :
+
+Content-Type: application/x-www-form-urlencoded, application/json,multipart/form-data ?
+
+Imagine you're sending the same information to an API: 
+* Name: Ravi 
+* Age: 25 
+* City: Chennai
+
+application/x-www-form-urlencoded-> The data is sent in the below way:  name=Ravi&age=25&city=Chennai
+
+Common uses: login forms, simple form submissions, and OAuth token requests. 
+application/json-> The data is sent in the below way:  {
+  "name": "Ravi",
+  "age": 25,
+  "city": "Chennai"
+}
+
+Common uses: REST APIs, creating or updating records, sending complex data, and passing arrays or nested objects. 
+multipart/form-data-> this is different and this is used to send the files  Some kind of example, bit not exactly:  formData = Map();
+formData.put("name", "Ravi");
+formData.put("city", "Chennai");
+
+response = invokeurl
+[
+    url: "https://api.example.com/users"
+    type: POST
+    parameters: formData
+    headers: {"Content-Type":"multipart/form-data"}
+];
+
+info response;
+
+Common uses: uploading images, documents, attachments, or sending files alongside ordinary form fields.
+
+
+4. Which one should you choose?
+Scenario	Content type
+API expects simple form fields	application/x-www-form-urlencoded
+API expects a JSON object	application/json
+API accepts file uploads or multipart forms	multipart/form-data
+OAuth token endpoint requires form-encoded parameters	application/x-www-form-urlencoded
+API requires a nested object or array in JSON	application/json
+
+-> Difference between parameters and Body:  Using parameters
+Typically used for form fields or URL parameters.
+name=Ravi&age=25 
+Suppose , you want to send an user’s data to an API, then we use parameters, example below:  data = Map();
+data.put("name", "Ravi");
+data.put("age", "25");
+
+response = invokeurl
+[
+    url: "https://api.example.com/users"
+    type: POST
+    parameters: data
+];
+
+info response;
+
+
+
+Using body
+Used when you need to provide the request body in a specific format.
+{"name":"Ravi","age":25}
+
+Now suppose the API expects JSON instead of form fields
+
+data = Map();
+data.put("name", "Ravi");
+data.put("age", 25);
+
+headersMap = Map();
+headersMap.put("Content-Type", "application/json");
+
+response = invokeurl
+[
+    url: "https://api.example.com/users"
+    type: POST
+    body: data.toString()
+    headers: headersMap
+];
+
+info response;
+
+4. When should you use each one?
+Situation	Use
+GET request with URL parameters	parameters
+POST request with form fields	parameters
+POST request with a JSON payload	body
+PUT request sending JSON to update a record	body
+API requires a raw text or supported file body	body
+
+Example:  ->One
+
+data = Map();
+data.put("name", "Ravi");
+data.put("age", "25");
+
+response = invokeurl
+[
+    url: "https://webhook.site/91d25273-0c18-4d65-b03a-6b94cbdd78ea"
+    type: POST
+    parameters: data
+	headers:{"Content-Type":"application/x-www-form-urlencoded"}
+];
+
+info response;  
+Form values	
+age	25
+name	Ravi
+
+Raw Content
+name=Ravi&age=25
+
+Two:
+
+data = Map();
+data.put("name", "Ravi");
+data.put("age", "25");
+
+response = invokeurl
+[
+    url: "https://webhook.site/91d25273-0c18-4d65-b03a-6b94cbdd78ea"
+    type: POST
+    parameters: data
+	headers:{"Content-Type":"text/plain"}
+];
+
+info response;
+
+Form values	
+age	25
+name	Ravi
+
+Raw Content
+name=Ravi&age=25
+Three:
+
+data = Map();
+data.put("name", "Ravi");
+data.put("age", "25");
+
+response = invokeurl
+[
+    url: "https://webhook.site/91d25273-0c18-4d65-b03a-6b94cbdd78ea"
+    type: POST
+    parameters: data
+];
+
+info response;
+
+Form values	
+age	25
+name	Ravi
+
+Raw Content
+name=Ravi&age=25
+
+Four
+
+data = Map();
+data.put("name", "Ravi");
+data.put("age", "25");
+
+response = invokeurl
+[
+    url: "https://webhook.site/91d25273-0c18-4d65-b03a-6b94cbdd78ea"
+    type: POST
+    parameters: data
+	headers:{"Content-Type":"application/json"}
+];
+
+info response;
+
+Form values	
+age	25
+name	Ravi
+
+Raw Content
+name=Ravi&age=25
